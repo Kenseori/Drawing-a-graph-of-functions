@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="Ru">
+
+<head>
+  <meta charset="utf8">
+  <title>Canvas</title>
+</head>
+
+<body>
+<div style="padding-left: 15%">
+  <a>Y=</a>
+  <input id="graf_gr" type="text" style="width: 540px; height: 20px" placeholder="Функция">
+  <button id="graf_cl_str_bt" type="button" style="width: 30px; height: 20px">D</button>
+  <input id="graf_col" type="color" style="width: 20px; height: 20px">
+  <button id="graf_bt" type="button" style="width: 165px; height: 20px">Нарисовать график</button>
+  <br>
+  <canvas height="800" id="myCanvas" style="border:1px solid black" width="800">
+    Ваш браузер не поддерживает тег canvas стандарта HTML5.
+  </canvas>
+  <br>
+  <button id="graf_cl" type="button" style="width: 800px; height: 20px">Очистить</button>
+  <br>
+  <pre>Поддерживаемые функции:
+    + - Плюс
+    - - Минус
+    * - Умножить
+    / - Делить
+    ^ - Степень
+    % - остаток от деления
+    abs()
+
+    sin()
+    asin()
+
+    cos()
+    acos()
+
+    tg()
+    atg()
+
+    ctg()
+    actg()
+
+    random()
+
+    ln()
+    exp()
+  ПРИ ВВОДЕ НЕПОДДЕРЖИВАЕМЫХ НЕ ЗАПУСТИТСЯ</pre>
+</div>
+
+<script>
+  function coord_line(ctx){
+	  ctx.beginPath();
+	  ctx.lineWidth = 1;
+	  ctx.strokeStyle = "gray";
+	  ctx.moveTo(0, c.height / 2);
+	  ctx.lineTo(c.width, c.height / 2);
+	  ctx.moveTo(c.width / 2, 0);
+	  ctx.lineTo(c.width / 2, c.height);
+	  ctx.stroke();
+
+	  for (let x = 0; x <= c.width; x += 100) {
+		  ctx.moveTo(x, c.height / 2 - 5);
+		  ctx.lineTo(x, c.height / 2 + 5);
+	  }
+	  for (let y = 0; y <= c.height; y += 100) {
+		  ctx.moveTo(c.height / 2 - 5, y);
+		  ctx.lineTo(c.height / 2 + 5, y);
+	  }
+	  ctx.stroke();
+  }
+	let c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	coord_line(ctx)
+
+	function past_symb(str, n) {
+		str = str[str.length - n]
+		return str
+	}
+
+	document.getElementById('graf_cl_str_bt').addEventListener('click', function (){
+		document.getElementById('graf_gr').value = ''
+  })
+
+	document.getElementById('graf_gr').addEventListener('input', function (){
+		this.value = this.value.replace(/[а-яА-ЯA-Z ]/g, '')
+  })
+	document.getElementById('graf_cl').onclick = function (){
+		ctx.clearRect(0, 0, c.width, c.height);
+		coord_line(ctx)
+  }
+  var funcciii = ['abs','sin','cos', 'tan', 'log', 'exp', 'random', 'atan']
+	document.getElementById('graf_bt').onclick = function () {
+		let col = document.getElementById('graf_col').value
+    let fu = document.getElementById('graf_gr').value
+    //fu = 'cot(atan(x))+tan(x)+cot(x)'
+
+		fu = fu.replace('ln', 'log')
+		fu = fu.replace('ctg', 'cot')
+		fu = fu.replace('tg', 'tan')
+		fu = fu.replace('arc', 'a')
+
+		let fu1 = fu.split(')')
+    fu = ''
+
+		fu1.forEach(function(item, index, array){
+			if(index != 0) {
+				fu1[index] = ')' + fu1[index]
+			}
+			if(fu1[index].includes('acot')){
+				let n = fu1[index].indexOf('acot(')
+				let last_s_s = fu1[index].substr(n+5, fu1[index].length)
+				fu1[index] = fu1[index].replace('acot('+ last_s_s, '(1.5708+atan('+'-1*('+last_s_s+')')
+			}
+
+			if(fu1[index].includes('cot')){
+				let n = fu1[index].indexOf('cot(')
+				let last_s_s = fu1[index].substr(n+4, fu1[index].length)
+				fu1[index] = fu1[index].replace('cot('+ last_s_s, 'cos('+last_s_s+')/sin('+last_s_s+'')
+			}
+			console.log(fu1[index])
+			funcciii.forEach(function(item){ fu1[index] = fu1[index].replace(item, 'Math.' + item)})
+			fu += fu1[index]
+		})
+    if(fu.split('(').length < fu.split(')').length){
+			fu = '(' + fu
+    }
+		if(fu.split('(').length > fu.split(')').length){
+			fu += ')'
+		}
+
+		fu = fu.replace('aMath.', 'Math.a')
+    fu = fu.replace('^', '**')
+    fu = fu.replace('-','+(-1)*')
+		let x, y, y1, x1
+    x = 1
+
+    console.log(fu)
+		console.log(fu.split('(').length)
+		console.log(fu.split(')').length)
+		//console.log(eval(fu))
+    graf(ctx, col, fu)
+	}
+
+	function graf(can, col, fu) {
+		let x, y, y1, x1
+		can.beginPath()
+		can.lineWidth = 2;
+		can.strokeStyle = col
+
+
+    x = -5
+		y = eval(fu)
+		x1 = x * 100
+		y1 = y * 100
+    can.moveTo((c.width / 2) + x1, (c.height / 2) - y1)
+
+
+		for (x = -6; x < 6; x += 0.01) {
+			y = eval(fu)
+			//console.log(fu)
+			x1 = Math.round((x*100).toFixed(2))
+			y1 = Math.round((y*100).toFixed(2))
+			//if(y1+'' == 'NaN'){break}
+			console.log(y1+':'+x1)
+			if(y1 > 600 || y1 < -600){
+				if(y1<=600){y1 = -600}
+				if(y1>=600){y1 = 600}
+				can.moveTo((c.width / 2) + x1, (c.height / 2) - y1)
+				console.log(y1+':'+x1)
+			}
+			else {
+				can.lineTo((c.width / 2) + x1, (c.height / 2) - y1)
+				console.log(y1+':'+x1)
+			}
+		}
+
+
+		can.stroke()
+	}
+	window.addEventListener("error", function (){
+		alert('Данная функция не поддерживается!\nНевозможно нарисовать график')
+  });
+</script>
+
+</body>
+
+</html>
